@@ -18,6 +18,7 @@ use std::{str};
 
 static IP: &'static str = "127.0.0.1";
 static PORT:        int = 4414;
+static mut visitor_count: uint = 0;
 
 fn main() {
     let addr = from_str::<SocketAddr>(format!("{:s}:{:d}", IP, PORT)).unwrap();
@@ -40,11 +41,15 @@ fn main() {
                 None => ()
             }
             
+            unsafe{
+            	visitor_count += 1;
+            }
             let mut buf = [0, ..500];
             stream.read(buf);
             let request_str = str::from_utf8(buf);
             println(format!("Received request :\n{:s}", request_str));
             
+            unsafe{
             let response: ~str = 
                 ~"HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n
                  <doctype !html><html><head><title>Hello, Rust!</title>
@@ -53,10 +58,12 @@ fn main() {
                         h2 { font-size:2cm; text-align: center; color: black; text-shadow: 0 0 4mm green}
                  </style></head>
                  <body>
-                 <h1>Greetings, Krusty!</h1>
-                 </body></html>\r\n";
+                 <h1>Greetings, Krusty!</h1>"
+                 + ~"Visitor count: " + visitor_count.to_str()
+                 + ~"</body></html>\r\n";
             stream.write(response.as_bytes());
             println!("Connection terminates.");
+            }
         }
     }
 }
