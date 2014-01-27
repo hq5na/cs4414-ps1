@@ -11,6 +11,10 @@
 // Weilin Xu and David Evans
 // Version 0.3
 
+//Author: Hangchen Qu
+//id: hq5na
+//date: Jan.26 2014
+
 #[feature(globs)];
 use std::io::*;
 use std::io::net::ip::{SocketAddr};
@@ -61,7 +65,7 @@ fn main() {
             	
             	println!("Request file path: {}", file_path.display());
 	
-	            if !file_path.exists(){
+	            if !file_path.exists() || file_path.is_dir(){
 	            	unsafe{
 	            	let response: ~str = 
 	                ~"HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n
@@ -76,15 +80,28 @@ fn main() {
 	                 + ~"</h2> No file served.</body></html>\r\n";
 	            	stream.write(response.as_bytes());
 	           	 	println!("Connection terminates.");
+	           	 	println!("No file served");
 	            	} 	
 	            }else{
 	            	println!("serve file: {}", file_path.display());
 	            	
 	            	let serve_file = File::open(&file_path);
+	            	let mut xx = file_path.extension_str();
+	        
+	            	println!("extension is: {}", xx)
 	            	match (serve_file) {
             			Some(mut serve) => {
-               				 let serve_bytes: ~[u8] = serve.read_to_end();
-        				stream.write(serve_bytes);
+            				
+            				if xx == Some("html"){	
+	               					let serve_bytes: ~[u8] = serve.read_to_end();
+	        						stream.write(serve_bytes);
+	        					}
+	        				else{
+				let response2: ~str = 
+                ~"HTTP/1.1 403 Forbidden\r\nContent-Type: text/html\r\n\r\n<!DOCTYPE html>\r\n<html>\r\n\t<head>\r\n\t\t<title>403 - Forbidden</title>\r\n\t</head>\r\n\t<body>\r\n\t\t<h1>403 - Forbidden</h1>\r\n\t</body>\r\n</html>";
+            stream.write(response2.as_bytes());
+            	println!("Forbidden");
+	        				}
             			} ,
             			None => fail!("Error opening message file")
         			}
